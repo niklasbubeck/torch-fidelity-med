@@ -2,6 +2,7 @@ import sys
 from contextlib import redirect_stdout
 
 import torch
+import nibabel as nib
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, STL10, CIFAR100
@@ -30,6 +31,17 @@ class ImagesPathDataset(Dataset):
         img = self.transforms(img)
         return img
 
+class NiftiPathDataset(Dataset):
+    def __init__(self, files, transforms=None):
+        self.files = files
+
+    def __len__(self):
+        return len(self.files)
+
+    def __getitem__(self, i):
+        path = self.files[i]
+        vol = torch.tensor(nib.load(path).get_fdata()).unsqueeze(0)
+        return vol
 
 class Cifar10_RGB(CIFAR10):
     def __init__(self, *args, **kwargs):

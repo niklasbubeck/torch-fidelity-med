@@ -127,8 +127,8 @@ class FeatureExtractorMed3dNetBase(FeatureExtractorBase):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        vassert(torch.is_tensor(x) and x.dtype == torch.uint8, "Expecting image as torch.Tensor with dtype=torch.uint8")
-        vassert(x.dim() == 4 and x.shape[1] == 3, f"Input is not Bx3xHxW: {x.shape}")
+        vassert(torch.is_tensor(x) and x.dtype == torch.float64, f"Expecting image as torch.Tensor with dtype=torch.uint8 has {x.dtype}")
+        vassert(x.dim() == 5 and x.shape[1] == 1, f"Input is not Bx1xDxHxW: {x.shape}")
         features = {}
         remaining_features = self.features_list.copy()
 
@@ -165,7 +165,6 @@ class FeatureExtractorMed3dNetBase(FeatureExtractorBase):
             remaining_features.remove("2048")
             if len(remaining_features) == 0:
                 return tuple(features[a] for a in self.features_list)
-
         return tuple(features[a] for a in self.features_list)
 
     @staticmethod
@@ -316,23 +315,23 @@ class FeatureExtractorMed3dNet50(FeatureExtractorMed3dNetBase):
     """Constructs a ResNet-18 model.
     """
     def __init__(self, *args, **kwargs): 
-        super(FeatureExtractorMed3dNet50, self).__init__(*args, BasicBlock, [3, 4, 6, 3], **kwargs)        
+        super(FeatureExtractorMed3dNet50, self).__init__(*args, Bottleneck, [3, 4, 6, 3], **kwargs)        
 
 class FeatureExtractorMed3dNet101(FeatureExtractorMed3dNetBase):
     """Constructs a ResNet-18 model.
     """
     def __init__(self, *args, **kwargs): 
-        super(FeatureExtractorMed3dNet101, self).__init__(*args, BasicBlock, [3, 4, 23, 3], **kwargs)  
+        super(FeatureExtractorMed3dNet101, self).__init__(*args, Bottleneck, [3, 4, 23, 3], **kwargs)  
 
 class FeatureExtractorMed3dNet152(FeatureExtractorMed3dNetBase):
     """Constructs a ResNet-18 model.
     """
     def __init__(self, *args, **kwargs): 
-        super(FeatureExtractorMed3dNet152, self).__init__(*args, BasicBlock, [3, 8, 36, 3], **kwargs)  
+        super(FeatureExtractorMed3dNet152, self).__init__(*args, Bottleneck, [3, 8, 36, 3], **kwargs)  
 
 class FeatureExtractorMed3dNet200(FeatureExtractorMed3dNetBase):
     """Constructs a ResNet-18 model.
     """
     def __init__(self, *args, **kwargs): 
-        super(FeatureExtractorMed3dNet200, self).__init__(*args, BasicBlock, [3, 24, 36, 3], **kwargs)  
+        super(FeatureExtractorMed3dNet200, self).__init__(*args, Bottleneck, [3, 24, 36, 3], **kwargs)  
 

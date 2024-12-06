@@ -74,6 +74,7 @@ def calculate_metrics_one_feature_extractor(**kwargs):
 
         vprint(verbose, f"Extracting features from input1")
         featuresdict_1 = extract_featuresdict_from_input_id_cached(1, feat_extractor, **kwargs)
+        print("featuresdict_1: ", featuresdict_1)
         featuresdict_2 = None
         if input2 is not None:
             vprint(verbose, f"Extracting features from input2")

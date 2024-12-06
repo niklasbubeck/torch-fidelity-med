@@ -32,7 +32,7 @@ def fid_features_to_statistics(features):
 def fid_statistics_to_metric(stat_1, stat_2, verbose):
     mu1, sigma1 = stat_1["mu"], stat_1["sigma"]
     mu2, sigma2 = stat_2["mu"], stat_2["sigma"]
-    assert mu1.ndim == 1 and mu1.shape == mu2.shape and mu1.dtype == mu2.dtype
+    assert mu1.ndim == 1 and mu1.shape == mu2.shape and mu1.dtype == mu2.dtype, f"Shapes of given fid_statistics file dont match with {mu1.ndim, mu1.shape, mu2.shape, mu1.dtype, mu2.dtype}"
     assert sigma1.ndim == 2 and sigma1.shape == sigma2.shape and sigma1.dtype == sigma2.dtype
 
     diff = mu1 - mu2
@@ -89,13 +89,18 @@ def fid_input_id_to_statistics_cached(input_id, feat_extractor, feat_layer_name,
 
 def fid_inputs_to_metric(feat_extractor, **kwargs):
     feat_layer_name = resolve_feature_layer_for_metric("fid", **kwargs)
+    fid_statistics_file = get_kwarg("fid_statistics_file", kwargs)
     verbose = get_kwarg("verbose", kwargs)
 
     vprint(verbose, f"Extracting statistics from input 1")
     stats_1 = fid_input_id_to_statistics_cached(1, feat_extractor, feat_layer_name, **kwargs)
 
-    vprint(verbose, f"Extracting statistics from input 2")
-    stats_2 = fid_input_id_to_statistics_cached(2, feat_extractor, feat_layer_name, **kwargs)
+    if fid_statistics_file is not None:
+        vprint(verbose, f"Extracting statistics from file {fid_statistics_file}")
+        stats_2 = {"mu": np.load(fid_statistics_file)['mu'], 'sigma': np.load(fid_statistics_file)['sigma']}
+    else:
+        vprint(verbose, f"Extracting statistics from input 2")
+        stats_2 = fid_input_id_to_statistics_cached(2, feat_extractor, feat_layer_name, **kwargs)
 
     metric = fid_statistics_to_metric(stats_1, stats_2, get_kwarg("verbose", kwargs))
     return metric

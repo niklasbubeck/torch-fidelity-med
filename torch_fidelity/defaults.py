@@ -37,7 +37,7 @@ DEFAULTS = {
     "prc_batch_size": 10000,
     "samples_shuffle": True,
     "samples_find_deep": False,
-    "samples_find_ext": "png,jpg,jpeg",
+    "samples_find_ext": "png,jpg,jpeg,gz",
     "samples_ext_lossy": "jpg,jpeg",
     "samples_resize_and_crop": 0,
     "datasets_root": None,
