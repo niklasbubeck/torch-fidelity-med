@@ -9,6 +9,7 @@ DEFAULTS = {
     "kid": False,
     "prc": False,
     "ppl": False,
+    "msssim": False,
     "feature_extractor": None,
     "feature_layer_isc": None,
     "feature_layer_fid": None,

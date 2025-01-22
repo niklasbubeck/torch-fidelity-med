@@ -4,6 +4,7 @@ from torch_fidelity.metric_fid import (
     fid_featuresdict_to_statistics_cached,
     fid_statistics_to_metric,
 )
+from torch_fidelity.metric_ms_ssim import calculate_ms_ssim
 from torch_fidelity.metric_isc import isc_featuresdict_to_metric
 from torch_fidelity.metric_kid import kid_featuresdict_to_metric
 from torch_fidelity.metric_prc import prc_featuresdict_to_metric
@@ -19,6 +20,7 @@ import numpy as np
 
 
 def calculate_metrics_one_feature_extractor(**kwargs):
+    print("Kwargs: ", kwargs)
     verbose = get_kwarg("verbose", kwargs)
     input1, input2, fid_statistics_file = get_kwarg("input1", kwargs), get_kwarg("input2", kwargs), get_kwarg("fid_statistics_file", kwargs)
 
@@ -27,11 +29,12 @@ def calculate_metrics_one_feature_extractor(**kwargs):
     have_kid = get_kwarg("kid", kwargs)
     have_prc = get_kwarg("prc", kwargs)
     have_ppl = get_kwarg("ppl", kwargs)
+    have_msssim = get_kwarg("msssim", kwargs)
 
     have_unary = have_isc or have_ppl
-    have_binary = have_fid or have_kid or have_prc
+    have_binary = have_fid or have_kid or have_prc or have_msssim
     have_any = have_unary or have_binary
-    have_other_than_ppl = have_isc or have_binary
+    have_other_than_ppl = have_isc or have_binary and not have_msssim
     have_only_fid = (not have_isc) and have_fid and (not have_kid) and (not have_prc)
 
     need_input1 = True
@@ -74,7 +77,6 @@ def calculate_metrics_one_feature_extractor(**kwargs):
 
         vprint(verbose, f"Extracting features from input1")
         featuresdict_1 = extract_featuresdict_from_input_id_cached(1, feat_extractor, **kwargs)
-        print("featuresdict_1: ", featuresdict_1)
         featuresdict_2 = None
         if input2 is not None:
             vprint(verbose, f"Extracting features from input2")
@@ -112,6 +114,11 @@ def calculate_metrics_one_feature_extractor(**kwargs):
     if have_ppl:
         metric_ppl = calculate_ppl(1, **kwargs)
         metrics.update(metric_ppl)
+
+    if have_msssim:
+        vassert(input2 is not None, "Second input is required for MSSSIM")
+        metric_msssim = calculate_ms_ssim(1, 2,**kwargs)
+        metrics.update(metric_msssim)
 
     return metrics
 
@@ -327,12 +334,15 @@ def calculate_metrics(**kwargs):
             - :const:`torch_fidelity.KEY_METRIC_F_SCORE`
     """
 
+    print("kwargs: ", kwargs)
+
     process_deprecations(kwargs)
 
     have_isc = get_kwarg("isc", kwargs)
     have_fid = get_kwarg("fid", kwargs)
     have_kid = get_kwarg("kid", kwargs)
     have_prc = get_kwarg("prc", kwargs)
+    have_msssim = get_kwarg("msssim", kwargs)
     fe_name = get_kwarg("feature_extractor", kwargs)
 
     have_default_fe_inception = have_isc or have_fid or have_kid

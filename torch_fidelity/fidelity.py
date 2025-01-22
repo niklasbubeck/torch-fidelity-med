@@ -56,6 +56,7 @@ def main():
     parser.add_argument("-k", "--kid", action="store_true", help="Calculate KID (Kernel Inception Distance)")
     parser.add_argument("-r", "--prc", action="store_true", help="Calculate PRC (Precision and Recall)")
     parser.add_argument("-p", "--ppl", action="store_true", help="Calculate PPL (Perceptual Path Length)")
+    parser.add_argument("-m", "--msssim", action="store_true", help="Calculate MSSSIM (Multi-Scale Structural Similarity)")
     parser.add_argument(
         "--feature-extractor",
         default=DEFAULTS["feature_extractor"],
@@ -309,7 +310,7 @@ def main():
         print(f"Use 'fidelity --help' to see the up-to-date command line options", file=sys.stderr)
         print(f"See https://github.com/toshas/torch-fidelity/blob/master/CHANGELOG.md", file=sys.stderr)
 
-    if not (args["isc"] or args["fid"] or args["kid"] or args["ppl"] or args["prc"]):
+    if not (args["isc"] or args["fid"] or args["kid"] or args["ppl"] or args["prc"] or args["msssim"]):
         print(f"No metrics to compute, exiting", file=sys.stderr)
         print(f"Use 'fidelity --help' to see the command line options", file=sys.stderr)
         exit(1)
