@@ -8,6 +8,7 @@ import torch.hub
 import torchvision
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
+from einops import rearrange
 
 from torch_fidelity import GenerativeModelModuleWrapper
 from torch_fidelity.datasets import ImagesPathDataset, TransformPILtoRGBTensor, NiftiPathDataset
@@ -111,7 +112,7 @@ def batch_interp(a, b, t, method):
     return fn_interpolate(a, b, t)
 
 
-def get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_cpu_ram, verbose):
+def get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_cpu_ram, verbose, vol_mode):
     vassert(isinstance(input, Dataset), "Input can only be a Dataset instance")
     vassert(torch.is_tensor(input[0]), "Input Dataset should return torch.Tensor")
     vassert(
@@ -139,6 +140,10 @@ def get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_
         for bid, batch in enumerate(dataloader):
             if cuda:
                 batch = batch.cuda(non_blocking=True)
+                
+            # adapt batch size for 2.5 fid
+            if vol_mode in ["axial", "sagittal", "coronal"]: 
+                batch = rearrange(batch, "b c d h w -> (b d) c h w")
 
             features = feat_extractor(batch)
             featuresdict = feat_extractor.convert_features_tuple_to_dict(features)
@@ -397,7 +402,7 @@ def extract_featuresdict_from_input_id(input_id, feat_extractor, **kwargs):
     input = prepare_input_from_id(input_id, **kwargs)
     if isinstance(input, Dataset):
         save_cpu_ram = get_kwarg("save_cpu_ram", kwargs)
-        featuresdict = get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_cpu_ram, verbose)
+        featuresdict = get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_cpu_ram, verbose, kwargs["vol_mode"])
     else:
         input_desc = prepare_input_descriptor_from_input_id(input_id, **kwargs)
         num_samples = input_desc["input_model_num_samples"]

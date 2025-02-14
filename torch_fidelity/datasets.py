@@ -49,14 +49,11 @@ class NiftiPathDataset(Dataset):
             vol = (vol * 255).clamp(0, 255).to(torch.uint8)
 
         if self.mode == "axial":
-            idx = random.randint(0, w-1)
-            return vol[..., idx].repeat(3,1,1) 
+            return vol.repeat(3,1,1,1) 
         elif self.mode == "sagittal":
-            idx = random.randint(0, h-1)
-            return vol[..., idx, :].repeat(3,1,1) 
+            return vol.permute(0, 2, 3, 1).repeat(3,1,1,1) 
         elif self.mode == "coronal": 
-            idx = random.randint(0, d-1)
-            return vol[..., idx, :, :].repeat(3,1,1) 
+            return vol.permute(0, 3, 1, 2).repeat(3,1,1,1) 
         else: 
             raise NotImplementedError(f"Nothing is implemented for the givem mode {self.mode}")
 
