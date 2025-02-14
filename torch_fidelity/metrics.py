@@ -20,7 +20,6 @@ import numpy as np
 
 
 def calculate_metrics_one_feature_extractor(**kwargs):
-    print("Kwargs: ", kwargs)
     verbose = get_kwarg("verbose", kwargs)
     input1, input2, fid_statistics_file = get_kwarg("input1", kwargs), get_kwarg("input2", kwargs), get_kwarg("fid_statistics_file", kwargs)
 
@@ -333,8 +332,6 @@ def calculate_metrics(**kwargs):
             - :const:`torch_fidelity.KEY_METRIC_RECALL`
             - :const:`torch_fidelity.KEY_METRIC_F_SCORE`
     """
-
-    print("kwargs: ", kwargs)
 
     process_deprecations(kwargs)
 

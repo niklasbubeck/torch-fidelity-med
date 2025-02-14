@@ -7,7 +7,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR10, STL10, CIFAR100
 import torchvision.transforms.functional as F
-
+import random
 from torch_fidelity.helpers import vassert
 
 
@@ -32,8 +32,9 @@ class ImagesPathDataset(Dataset):
         return img
 
 class NiftiPathDataset(Dataset):
-    def __init__(self, files, transforms=None):
+    def __init__(self, files, mode="3d", transforms=None):
         self.files = files
+        self.mode = mode 
 
     def __len__(self):
         return len(self.files)
@@ -41,7 +42,23 @@ class NiftiPathDataset(Dataset):
     def __getitem__(self, i):
         path = self.files[i]
         vol = torch.tensor(nib.load(path).get_fdata()).unsqueeze(0)
-        return vol
+        c, d, h, w = vol.shape
+        if self.mode == "3d": 
+            return vol
+        else: 
+            vol = (vol * 255).clamp(0, 255).to(torch.uint8)
+
+        if self.mode == "axial":
+            idx = random.randint(0, w-1)
+            return vol[..., idx].repeat(3,1,1) 
+        elif self.mode == "sagittal":
+            idx = random.randint(0, h-1)
+            return vol[..., idx, :].repeat(3,1,1) 
+        elif self.mode == "coronal": 
+            idx = random.randint(0, d-1)
+            return vol[..., idx, :, :].repeat(3,1,1) 
+        else: 
+            raise NotImplementedError(f"Nothing is implemented for the givem mode {self.mode}")
 
 class Cifar10_RGB(CIFAR10):
     def __init__(self, *args, **kwargs):

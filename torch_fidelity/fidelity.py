@@ -57,6 +57,7 @@ def main():
     parser.add_argument("-r", "--prc", action="store_true", help="Calculate PRC (Precision and Recall)")
     parser.add_argument("-p", "--ppl", action="store_true", help="Calculate PPL (Perceptual Path Length)")
     parser.add_argument("-m", "--msssim", action="store_true", help="Calculate MSSSIM (Multi-Scale Structural Similarity)")
+    parser.add_argument("--vol-mode", default=DEFAULTS["vol-mode"], type=str, help="Mode to use, for images 2d is standard, for nii 3d is standard. Possibilities for med data are: [axial, sagittal, coronal]")
     parser.add_argument(
         "--feature-extractor",
         default=DEFAULTS["feature_extractor"],
@@ -339,8 +340,7 @@ def main():
 
     if args["json"]:
         print(json.dumps(metrics, indent=4))
-    else:
-        print("\n".join((f"{k}: {v:.7g}" for k, v in metrics.items())))
+    print("\n".join((f"{k}: {v:.7g}" for k, v in metrics.items())))
 
 
 if __name__ == "__main__":

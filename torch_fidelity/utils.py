@@ -261,7 +261,7 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
             input = glob_samples_paths(input, samples_find_deep, samples_find_ext, samples_ext_lossy, verbose)
             vassert(len(input) > 0, f"No samples found in {input} with samples_find_deep={samples_find_deep}")
             if input[0].endswith("nii.gz"):
-                input = NiftiPathDataset(input)
+                input = NiftiPathDataset(input, mode=kwargs["vol_mode"])
             else:    
                 transforms = []
                 if samples_resize_and_crop > 0:
