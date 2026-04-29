@@ -14,7 +14,7 @@ from torch_fidelity.utils import (
 
 KEY_METRIC_MS_SSIM = "multi_scale_structural_similarity"
 
-ms_ssim = MultiScaleSSIMMetric(spatial_dims=3, data_range=1.0, kernel_size=7)
+ms_ssim = MultiScaleSSIMMetric(spatial_dims=2, data_range=1.0, kernel_size=7)
 
 def calculate_ms_ssim(input_id1, input_id2, **kwargs):
     input_desc1 = prepare_input_from_id(input_id1, **kwargs)
@@ -27,11 +27,11 @@ def calculate_ms_ssim(input_id1, input_id2, **kwargs):
     cuda = get_kwarg("cuda", kwargs)
     ms_ssim_list = []
     for batch1 in tqdm(dl1):
-        for batch2 in tqdm(dl2):
+        for batch2 in dl2:
             if cuda:
-                batch1 = batch1.cuda()
-                batch2 = batch2.cuda()
-            print(batch1.shape, batch2.shape, batch1.device, batch2.device)
+                batch1 = batch1.cuda().float()
+                batch2 = batch2.cuda().float()
+            # print(batch1.shape, batch2.shape, batch1.device, batch2.device)
             ms_ssim_list.append(ms_ssim(batch1, batch2).mean().item())
     ms_ssim_list = np.array(ms_ssim_list)
     out = {KEY_METRIC_MS_SSIM: ms_ssim_list.mean()}

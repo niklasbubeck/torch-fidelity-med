@@ -42,13 +42,15 @@ class NiftiPathDataset(Dataset):
     def __getitem__(self, i):
         path = self.files[i]
         vol = torch.tensor(nib.load(path).get_fdata()).unsqueeze(0)
-        c, d, h, w = vol.shape
         if self.mode == "3d": 
             return vol
         else: 
             vol = (vol * 255).clamp(0, 255).to(torch.uint8)
 
-        if self.mode == "axial":
+
+        if self.mode == "2d":
+            return vol.repeat(3,1,1)
+        elif self.mode == "axial":
             return vol.repeat(3,1,1,1) 
         elif self.mode == "sagittal":
             return vol.permute(0, 2, 3, 1).repeat(3,1,1,1) 
