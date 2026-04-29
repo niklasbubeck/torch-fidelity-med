@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="torch-fidelity-med">
+  <defs>
+    <radialGradient id="tfm-bg" cx="32%" cy="28%" r="82%">
+      <stop offset="0%" stop-color="#fff2dc"/>
+      <stop offset="55%" stop-color="#f7c9a3"/>
+      <stop offset="100%" stop-color="#eda87f"/>
+    </radialGradient>
+    <linearGradient id="tfm-heart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e88a68"/>
+      <stop offset="100%" stop-color="#b85a3c"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#tfm-bg)"/>
+  <path d="M32 50
+           C 22 44, 12 35, 12 24
+           C 12 17, 17 12, 24 12
+           C 28 12, 30 13, 32 16
+           C 34 13, 36 12, 40 12
+           C 47 12, 52 17, 52 24
+           C 52 35, 42 44, 32 50 Z"
+        fill="url(#tfm-heart)"/>
+  <circle cx="46" cy="46" r="3.2" fill="#9bb39b" opacity="0.85"/>
+</svg>

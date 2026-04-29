@@ -7,6 +7,7 @@ from torch_fidelity.feature_extractor_dinov2 import FeatureExtractorDinoV2
 from torch_fidelity.feature_extractor_inceptionv3 import FeatureExtractorInceptionV3
 from torch_fidelity.feature_extractor_vgg16 import FeatureExtractorVGG16
 from torch_fidelity.feature_extractor_med3dnet import FeatureExtractorMed3dNet10, FeatureExtractorMed3dNet18, FeatureExtractorMed3dNet34, FeatureExtractorMed3dNet50, FeatureExtractorMed3dNet101, FeatureExtractorMed3dNet152, FeatureExtractorMed3dNet200
+from torch_fidelity.feature_extractor_radimagenet import FeatureExtractorRadImageNet
 from torch_fidelity.helpers import vassert
 from torch_fidelity.noise import (
     random_normal,
@@ -196,6 +197,8 @@ register_feature_extractor("med3dnet-50", FeatureExtractorMed3dNet50)
 register_feature_extractor("med3dnet-101", FeatureExtractorMed3dNet101)
 register_feature_extractor("med3dnet-152", FeatureExtractorMed3dNet152)
 register_feature_extractor("med3dnet-200", FeatureExtractorMed3dNet200)
+
+register_feature_extractor("radimagenet-resnet50", FeatureExtractorRadImageNet)
 
 register_sample_similarity("lpips-vgg16", SampleSimilarityLPIPS)
 

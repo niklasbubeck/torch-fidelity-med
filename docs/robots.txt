@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://niklasbubeck.github.io/torch-fidelity-med/sitemap.xml

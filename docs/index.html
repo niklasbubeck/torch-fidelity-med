@@ -3,8 +3,59 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>torch-fidelity-med — generative metrics for medical imaging</title>
-  <meta name="description" content="A medical-imaging fork of torch-fidelity: ISC, FID, KID, PRC, PPL and MS-SSIM for generative models, extended to 3D scans (NIfTI) and 2.5D evaluation with Med3DNet feature extractors.">
+  <title>torch-fidelity-med — FID, KID, MS-SSIM for medical imaging in PyTorch</title>
+
+  <!-- Primary meta -->
+  <meta name="description" content="torch-fidelity-med is a medical-imaging fork of torch-fidelity for generative model evaluation in PyTorch. FID, KID, ISC, PRC, PPL, and MS-SSIM with medically-pretrained feature extractors: 3D Med3DNet ResNets and 2D RadImageNet. NIfTI input, 2.5D evaluation, exact-precision metrics.">
+  <meta name="keywords" content="FID medical imaging, MedicalNet PyTorch, RadImageNet FID, torch-fidelity, generative model evaluation, NIfTI metrics, 3D FID, 2.5D FID, KID medical, MS-SSIM medical, MRI generative model evaluation, CT generative model evaluation, MONAI generative metrics, Frechet Inception Distance medical">
+  <meta name="author" content="Niklas Bubeck">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+  <meta name="theme-color" content="#d97757">
+  <link rel="canonical" href="https://niklasbubeck.github.io/torch-fidelity-med/">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="torch-fidelity-med — FID, KID, MS-SSIM for medical imaging in PyTorch">
+  <meta property="og:description" content="Generative model metrics (FID, KID, ISC, PRC, PPL, MS-SSIM) extended to medical imaging — Med3DNet 3D ResNets, RadImageNet 2D features, NIfTI input, 2.5D evaluation. A precise, drop-in fork of torch-fidelity.">
+  <meta property="og:url" content="https://niklasbubeck.github.io/torch-fidelity-med/">
+  <meta property="og:site_name" content="torch-fidelity-med">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="torch-fidelity-med — FID, KID, MS-SSIM for medical imaging in PyTorch">
+  <meta name="twitter:description" content="Generative model metrics (FID, KID, ISC, PRC, PPL, MS-SSIM) extended to medical imaging — Med3DNet, RadImageNet, NIfTI, 2.5D evaluation.">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "torch-fidelity-med",
+    "description": "A medical-imaging fork of torch-fidelity for generative model evaluation in PyTorch. Adds Med3DNet 3D feature extractors, RadImageNet 2D radiology features, NIfTI volume input, 2.5D evaluation along axial/sagittal/coronal orientations, and MS-SSIM, while preserving upstream's exact-precision FID/KID/ISC/PRC/PPL.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux, macOS, Windows",
+    "programmingLanguage": "Python",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "codeRepository": "https://github.com/niklasbubeck/torch-fidelity-med",
+    "url": "https://niklasbubeck.github.io/torch-fidelity-med/",
+    "isBasedOn": {
+      "@type": "SoftwareSourceCode",
+      "name": "torch-fidelity",
+      "codeRepository": "https://github.com/toshas/torch-fidelity",
+      "author": "Anton Obukhov"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Niklas Bubeck",
+      "url": "https://github.com/niklasbubeck"
+    },
+    "keywords": "FID, KID, ISC, PRC, PPL, MS-SSIM, MedicalNet, RadImageNet, NIfTI, 2.5D, generative models, PyTorch, medical imaging, MRI, CT"
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -335,15 +386,17 @@
       </div>
     </nav>
 
+    <main>
     <header>
       <span class="pill"><span class="dot"></span>A medical fork of <a href="https://github.com/toshas/torch-fidelity" style="color: inherit; text-decoration: underline; text-decoration-color: rgba(217, 119, 87, 0.4);">torch-fidelity</a></span>
       <h1>Generative metrics, <em>now for medical scans</em>.</h1>
       <p class="lede">
         <strong>torch-fidelity-med</strong> keeps the precision and caching that made
         <em>torch-fidelity</em> a reference for GAN evaluation, and extends it to
-        volumetric medical imaging — <strong>3D feature extractors</strong>,
-        <strong>NIfTI inputs</strong>, <strong>2.5D evaluation</strong>, and
-        <strong>MS-SSIM</strong>, in one drop-in package.
+        medical imaging — <strong>medically-pretrained feature extractors</strong>
+        (3D Med3DNet, 2D RadImageNet), <strong>NIfTI inputs</strong>,
+        <strong>2.5D evaluation</strong>, and <strong>MS-SSIM</strong>, in one drop-in
+        package.
       </p>
 
       <div class="cta-row">
@@ -356,23 +409,30 @@
 
     <section id="whats-new">
       <div class="section-kicker">What's added</div>
-      <h2>Built for volumes, not just images.</h2>
+      <h2>Built for medical data, end&#8209;to&#8209;end.</h2>
       <p class="section-sub">
         Everything upstream still works. The fork adds the pieces you need when your
-        generative model produces MRI, CT, or other 3D scans.
+        generative model produces MRI, CT, or other radiological scans — including
+        feature extractors that were actually pretrained on medical data.
       </p>
 
       <div class="grid">
         <div class="card">
           <div class="icon">3D</div>
-          <h3>Med3DNet feature extractors</h3>
-          <p>Pretrained 3D ResNets — depths 10, 18, 34, 50, 101, 152, 200 — drop in as feature extractors for FID, KID, PRC, ISC.</p>
+          <h3>Med3DNet — 3D ResNets</h3>
+          <p>Pretrained 3D ResNets at depths 10, 18, 34, 50, 101, 152, 200, drop-in for FID, KID, PRC, ISC. Weights auto-download from the official MedicalNet release on first use.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">2D</div>
+          <h3>RadImageNet — 2D radiology features</h3>
+          <p>ResNet50 pretrained on RadImageNet (Mei et al.) via <code>torch.hub</code>, with the right BGR + mean-subtract preprocessing baked in. Pairs naturally with <em>2.5D</em> mode for slice-based FID/KID.</p>
         </div>
 
         <div class="card">
           <div class="icon">·nii</div>
           <h3>NIfTI input, no glue code</h3>
-          <p>Point <code>--input1</code> at a directory of <code>.nii.gz</code> files. Volumes are loaded with <em>nibabel</em> and routed automatically.</p>
+          <p>Point <code>--input1</code> at a directory of <code>.nii.gz</code> files. Volumes are loaded with <em>nibabel</em> and routed automatically — 3D for volumetric extractors, slice-stacked for 2D ones.</p>
         </div>
 
         <div class="card">
@@ -391,12 +451,6 @@
           <div class="icon">µ,Σ</div>
           <h3>Precomputed FID stats</h3>
           <p>Skip extracting <code>input2</code> entirely — load <code>µ</code> and <code>Σ</code> from an <code>.npz</code> file via <code>--fid_statistics_file</code>.</p>
-        </div>
-
-        <div class="card">
-          <div class="icon">↻</div>
-          <h3>Per-orientation caching</h3>
-          <p>Features and FID statistics are cached separately per orientation, so repeated 2.5D runs reuse work instead of recomputing it.</p>
         </div>
       </div>
     </section>
@@ -423,9 +477,9 @@
 <span class="code-line">  --input1 <span class="s">./real/</span> --input2 <span class="s">./generated/</span></span></pre>
       </div>
 
-      <pre style="margin-top: 16px;"><span class="code-line"><span class="c"># 2.5D — runs all three orientations, reports each and their mean</span></span>
+      <pre style="margin-top: 16px;"><span class="code-line"><span class="c"># 2.5D + RadImageNet — medical features per orientation, plus their mean</span></span>
 <span class="code-line">fidelity --gpu 0 --fid \</span>
-<span class="code-line">  --feature-extractor <span class="k">inception-v3-compat</span> \</span>
+<span class="code-line">  --feature-extractor <span class="k">radimagenet-resnet50</span> \</span>
 <span class="code-line">  --vol-mode <span class="k">2_5d</span> -b 4 \</span>
 <span class="code-line">  --input1 <span class="s">./real/</span> --input2 <span class="s">./generated/</span></span>
 <span class="code-line"></span>
@@ -475,19 +529,24 @@
         <span class="chip sage">med3dnet-101</span>
         <span class="chip sage">med3dnet-152</span>
         <span class="chip sage">med3dnet-200</span>
+        <span class="chip sage">radimagenet-resnet50</span>
       </div>
     </section>
 
-    <section>
-      <div class="section-kicker">Acknowledgements</div>
-      <h2>Built on the shoulders of upstream.</h2>
+    <section id="citation">
+      <div class="section-kicker">Citation</div>
+      <h2>If you use this in a paper.</h2>
       <p class="section-sub">
         torch-fidelity-med is a fork of <a href="https://github.com/toshas/torch-fidelity"
         style="color: var(--coral-deep);">torch-fidelity</a> by Anton Obukhov et&nbsp;al.
         All of the precision, caching, and API design carries over — please cite the
-        original work when reporting results.
+        original work, and additionally cite this fork if you used the medical-imaging
+        extensions.
       </p>
 
+      <h3 style="font-family: 'Fraunces', serif; font-weight: 500; font-size: 17px; margin: 28px 0 10px; color: var(--ink);">
+        Upstream <span style="color: var(--ink-faint); font-weight: 400;">— always cite</span>
+      </h3>
       <pre>@misc{obukhov2020torchfidelity,
   author    = {Anton Obukhov and Maximilian Seitzer and Po-Wei Wu and
                Semen Zhydenko and Jonathan Kyl and Elvis Yu-Jing Lin},
@@ -497,7 +556,21 @@
   publisher = {Zenodo},
   doi       = {10.5281/zenodo.4957738}
 }</pre>
+
+      <h3 style="font-family: 'Fraunces', serif; font-weight: 500; font-size: 17px; margin: 28px 0 10px; color: var(--ink);">
+        This fork <span style="color: var(--ink-faint); font-weight: 400;">— if you used the medical extensions</span>
+      </h3>
+      <pre>@misc{bubeck2025torchfidelitymed,
+  author    = {Niklas Bubeck},
+  year      = {2025},
+  title     = {torch-fidelity-med: medical-imaging extensions to torch-fidelity},
+  howpublished = {\url{https://github.com/niklasbubeck/torch-fidelity-med}},
+  note      = {Adds Med3DNet 3D feature extractors, RadImageNet 2D radiology
+               features, NIfTI input, 2.5D evaluation, and MS-SSIM.}
+}</pre>
     </section>
+
+    </main>
 
     <footer>
       <span>Apache 2.0 · made with <span class="heart">♥</span> for medical generative modelling</span>
