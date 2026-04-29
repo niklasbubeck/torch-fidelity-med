@@ -2,7 +2,9 @@
 #   https://github.com/mseitzer/pytorch-fid/blob/master/src/pytorch_fid/inception.py
 #   Distributed under Apache License 2.0: https://github.com/mseitzer/pytorch-fid/blob/master/LICENSE
 
+import os
 import sys
+import zipfile
 from contextlib import redirect_stdout
 
 import torch
@@ -11,8 +13,70 @@ import torch.nn.functional as F
 from torch.hub import load_state_dict_from_url
 
 from torch_fidelity.feature_extractor_base import FeatureExtractorBase
-from torch_fidelity.helpers import vassert, text_to_dtype, get_kwarg
+from torch_fidelity.helpers import vassert, text_to_dtype, get_kwarg, vprint
 from torch_fidelity.interpolate_compat_tensorflow import interpolate_bilinear_2d_like_tensorflow1x
+
+
+MEDICALNET_GDRIVE_ID = "13tnSvXY7oDIEloNFiGTsjUIYfS3g3BfG"
+MEDICALNET_DEPTHS = ("10", "18", "34", "50", "101", "152", "200")
+
+
+def _medicalnet_cache_dir():
+    root = os.path.join(torch.hub._get_torch_home(), "checkpoints", "medicalnet")
+    os.makedirs(root, exist_ok=True)
+    return root
+
+
+def _download_medicalnet_weights(depth, verbose=True):
+    """
+    Ensure the MedicalNet pretrained weights for the given ResNet depth exist locally.
+
+    The MedicalNet release is a single archive containing all depths, so the first call
+    downloads and extracts everything; subsequent calls hit the cache. Files land in
+    ``$TORCH_HOME/checkpoints/medicalnet/resnet_<depth>.pth``.
+    """
+    cache_dir = _medicalnet_cache_dir()
+    target = os.path.join(cache_dir, f"resnet_{depth}.pth")
+    if os.path.exists(target):
+        return target
+
+    try:
+        import gdown
+    except ImportError as e:
+        raise RuntimeError(
+            "Automatic download of MedicalNet weights requires the 'gdown' package "
+            "(Google Drive's confirmation flow can't be handled by torch.hub). "
+            "Install it with: pip install gdown — or pass --feature-extractor-weights-path "
+            "to point at a local resnet_<depth>.pth checkpoint."
+        ) from e
+
+    archive_path = os.path.join(cache_dir, "MedicalNet_pretrain.zip")
+    vprint(verbose, f"Downloading MedicalNet pretrained weights from Google Drive into {cache_dir}")
+    gdown.download(id=MEDICALNET_GDRIVE_ID, output=archive_path, quiet=not verbose)
+
+    vprint(verbose, "Extracting MedicalNet archive")
+    with zipfile.ZipFile(archive_path, "r") as zf:
+        zf.extractall(cache_dir)
+    try:
+        os.remove(archive_path)
+    except OSError:
+        pass
+
+    # Hoist any resnet_*.pth nested inside subdirectories (e.g. pretrain/) up to cache_dir.
+    for r, _, ff in os.walk(cache_dir):
+        for f in ff:
+            if f.startswith("resnet_") and f.endswith(".pth"):
+                src = os.path.join(r, f)
+                dst = os.path.join(cache_dir, f)
+                if os.path.abspath(src) != os.path.abspath(dst):
+                    os.replace(src, dst)
+
+    if not os.path.exists(target):
+        raise FileNotFoundError(
+            f"resnet_{depth}.pth not found after extracting the MedicalNet archive into {cache_dir}. "
+            f"Inspect the archive contents and set --feature-extractor-weights-path manually."
+        )
+    return target
 
 
 class FeatureExtractorMed3dNetBase(FeatureExtractorBase):
@@ -89,10 +153,18 @@ class FeatureExtractorMed3dNetBase(FeatureExtractorBase):
 
 
         if feature_extractor_weights_path is None:
-            raise Exception("you have to give the path to the weights!")
-        else:
-            state_dict = torch.load(feature_extractor_weights_path)["state_dict"]
-            state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
+            depth = name.rsplit("-", 1)[-1]
+            vassert(
+                depth in MEDICALNET_DEPTHS,
+                f"Cannot infer MedicalNet depth from extractor name '{name}'. "
+                f"Expected one of {MEDICALNET_DEPTHS}, or pass feature_extractor_weights_path explicitly.",
+            )
+            feature_extractor_weights_path = _download_medicalnet_weights(
+                depth, verbose=get_kwarg("verbose", kwargs)
+            )
+
+        state_dict = torch.load(feature_extractor_weights_path)["state_dict"]
+        state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
 
         self.load_state_dict(state_dict)
 

@@ -122,6 +122,31 @@ def calculate_metrics_one_feature_extractor(**kwargs):
     return metrics
 
 
+_ORIENTATIONS_2_5D = ("axial", "sagittal", "coronal")
+
+
+def _calculate_metrics_2_5d(**kwargs):
+    verbose = get_kwarg("verbose", kwargs)
+    per_orientation = {}
+    for orient in _ORIENTATIONS_2_5D:
+        vprint(verbose, f"=== 2.5D pass: {orient} ===")
+        kw = dict(kwargs)
+        kw["vol_mode"] = orient
+        per_orientation[orient] = calculate_metrics(**kw)
+
+    metric_keys = list(per_orientation[_ORIENTATIONS_2_5D[0]].keys())
+    out = {}
+    for k in metric_keys:
+        values = [per_orientation[o][k] for o in _ORIENTATIONS_2_5D]
+        for orient, v in zip(_ORIENTATIONS_2_5D, values):
+            out[f"2_5_{k}_{orient}"] = v
+        try:
+            out[f"2_5_{k}_mean"] = float(np.mean([float(v) for v in values]))
+        except (TypeError, ValueError):
+            pass
+    return out
+
+
 def calculate_metrics(**kwargs):
     """
     Calculates metrics for the given inputs. Keyword arguments:
@@ -334,6 +359,9 @@ def calculate_metrics(**kwargs):
     """
 
     process_deprecations(kwargs)
+
+    if get_kwarg("vol_mode", kwargs) == "2_5d":
+        return _calculate_metrics_2_5d(**kwargs)
 
     have_isc = get_kwarg("isc", kwargs)
     have_fid = get_kwarg("fid", kwargs)

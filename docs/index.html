@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>torch-fidelity-med — generative metrics for medical imaging</title>
+  <meta name="description" content="A medical-imaging fork of torch-fidelity: ISC, FID, KID, PRC, PPL and MS-SSIM for generative models, extended to 3D scans (NIfTI) and 2.5D evaluation with Med3DNet feature extractors.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fbf5ec;
+      --cream-deep: #f6ecdb;
+      --paper: #fffaf1;
+      --ink: #3a2c22;
+      --ink-soft: #6f5c4d;
+      --ink-faint: #a3917f;
+      --coral: #d97757;
+      --coral-deep: #b85a3c;
+      --peach: #f1b793;
+      --rose: #e8a195;
+      --sage: #9bb39b;
+      --line: #ead9c1;
+      --shadow: 0 1px 2px rgba(58, 44, 34, 0.04), 0 8px 24px rgba(58, 44, 34, 0.06);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse at top left, rgba(241, 183, 147, 0.35), transparent 55%),
+        radial-gradient(ellipse at top right, rgba(232, 161, 149, 0.25), transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(155, 179, 155, 0.18), transparent 60%),
+        var(--cream);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 28px 96px;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 64px;
+      font-size: 14px;
+      color: var(--ink-soft);
+    }
+
+    nav .mark {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    nav .mark span { color: var(--coral); }
+
+    nav a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      margin-left: 22px;
+      transition: color 0.15s;
+    }
+
+    nav a:hover { color: var(--coral-deep); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(217, 119, 87, 0.10);
+      color: var(--coral-deep);
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid rgba(217, 119, 87, 0.18);
+      letter-spacing: 0.01em;
+    }
+
+    .pill .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--coral);
+    }
+
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: clamp(40px, 6vw, 60px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin: 22px 0 18px;
+      color: var(--ink);
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--coral-deep);
+      font-weight: 500;
+    }
+
+    .lede {
+      font-size: 19px;
+      color: var(--ink-soft);
+      max-width: 640px;
+      margin: 0 0 32px;
+      line-height: 1.55;
+    }
+
+    .lede strong { color: var(--ink); font-weight: 600; }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 56px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: transform 0.12s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--coral);
+      color: #fff;
+      box-shadow: 0 1px 1px rgba(184, 90, 60, 0.3), 0 6px 14px rgba(217, 119, 87, 0.28);
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); background: var(--coral-deep); }
+
+    .btn-ghost {
+      background: var(--paper);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .btn-ghost:hover { border-color: var(--coral); color: var(--coral-deep); }
+
+    h2 {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 28px;
+      letter-spacing: -0.01em;
+      margin: 64px 0 6px;
+      color: var(--ink);
+    }
+
+    .section-kicker {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--coral);
+      font-weight: 600;
+    }
+
+    .section-sub {
+      color: var(--ink-soft);
+      margin: 0 0 28px;
+      max-width: 640px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px 22px 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--peach);
+    }
+
+    .card .icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(241, 183, 147, 0.55), rgba(232, 161, 149, 0.55));
+      color: var(--coral-deep);
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 17px;
+      margin-bottom: 14px;
+    }
+
+    .card h3 {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 19px;
+      margin: 0 0 6px;
+      letter-spacing: -0.005em;
+    }
+
+    .card p {
+      color: var(--ink-soft);
+      font-size: 14.5px;
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    .metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: var(--cream-deep);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--line);
+    }
+
+    .chip.warm {
+      background: rgba(217, 119, 87, 0.08);
+      color: var(--coral-deep);
+      border-color: rgba(217, 119, 87, 0.20);
+    }
+
+    .chip.sage {
+      background: rgba(155, 179, 155, 0.18);
+      color: #4f6b51;
+      border-color: rgba(155, 179, 155, 0.35);
+    }
+
+    pre, code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13.5px;
+    }
+
+    pre {
+      background: #fff8ec;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      color: var(--ink);
+      line-height: 1.55;
+      box-shadow: var(--shadow);
+    }
+
+    code { color: var(--coral-deep); background: rgba(217, 119, 87, 0.08); padding: 1px 6px; border-radius: 4px; }
+    pre code { background: none; padding: 0; color: inherit; }
+
+    .code-line .c { color: var(--ink-faint); }
+    .code-line .k { color: var(--coral-deep); font-weight: 500; }
+    .code-line .s { color: #6b8e9b; }
+    .code-line .v { color: #8b6f47; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+
+    .quote {
+      border-left: 3px solid var(--peach);
+      padding: 6px 0 6px 20px;
+      color: var(--ink-soft);
+      font-style: italic;
+      margin: 28px 0 0;
+    }
+
+    footer {
+      margin-top: 96px;
+      padding-top: 28px;
+      border-top: 1px solid var(--line);
+      font-size: 13.5px;
+      color: var(--ink-faint);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: space-between;
+    }
+
+    footer a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px dotted var(--ink-faint); }
+    footer a:hover { color: var(--coral-deep); border-bottom-color: var(--coral); }
+
+    .heart { color: var(--coral); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <div class="mark">torch-fidelity<span>-med</span></div>
+      <div>
+        <a href="#whats-new">What's added</a>
+        <a href="#quickstart">Quickstart</a>
+        <a href="#metrics">Metrics</a>
+        <a href="https://github.com/niklasbubeck/torch-fidelity-med">GitHub</a>
+      </div>
+    </nav>
+
+    <header>
+      <span class="pill"><span class="dot"></span>A medical fork of <a href="https://github.com/toshas/torch-fidelity" style="color: inherit; text-decoration: underline; text-decoration-color: rgba(217, 119, 87, 0.4);">torch-fidelity</a></span>
+      <h1>Generative metrics, <em>now for medical scans</em>.</h1>
+      <p class="lede">
+        <strong>torch-fidelity-med</strong> keeps the precision and caching that made
+        <em>torch-fidelity</em> a reference for GAN evaluation, and extends it to
+        volumetric medical imaging — <strong>3D feature extractors</strong>,
+        <strong>NIfTI inputs</strong>, <strong>2.5D evaluation</strong>, and
+        <strong>MS-SSIM</strong>, in one drop-in package.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/niklasbubeck/torch-fidelity-med">
+          View on GitHub →
+        </a>
+        <a class="btn btn-ghost" href="#quickstart">Quickstart</a>
+      </div>
+    </header>
+
+    <section id="whats-new">
+      <div class="section-kicker">What's added</div>
+      <h2>Built for volumes, not just images.</h2>
+      <p class="section-sub">
+        Everything upstream still works. The fork adds the pieces you need when your
+        generative model produces MRI, CT, or other 3D scans.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <div class="icon">3D</div>
+          <h3>Med3DNet feature extractors</h3>
+          <p>Pretrained 3D ResNets — depths 10, 18, 34, 50, 101, 152, 200 — drop in as feature extractors for FID, KID, PRC, ISC.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">·nii</div>
+          <h3>NIfTI input, no glue code</h3>
+          <p>Point <code>--input1</code> at a directory of <code>.nii.gz</code> files. Volumes are loaded with <em>nibabel</em> and routed automatically.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">2.5</div>
+          <h3>2.5D evaluation</h3>
+          <p>Run along <em>axial</em>, <em>sagittal</em>, or <em>coronal</em> orientations — or pass <code>--vol-mode 2_5d</code> to compute all three and report each plus their mean.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">≈</div>
+          <h3>MS-SSIM</h3>
+          <p>Multi-scale structural similarity between two sets of samples, exposed via <code>--msssim</code> for paired image-quality reporting.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">µ,Σ</div>
+          <h3>Precomputed FID stats</h3>
+          <p>Skip extracting <code>input2</code> entirely — load <code>µ</code> and <code>Σ</code> from an <code>.npz</code> file via <code>--fid_statistics_file</code>.</p>
+        </div>
+
+        <div class="card">
+          <div class="icon">↻</div>
+          <h3>Per-orientation caching</h3>
+          <p>Features and FID statistics are cached separately per orientation, so repeated 2.5D runs reuse work instead of recomputing it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="quickstart">
+      <div class="section-kicker">Quickstart</div>
+      <h2>From <code>pip install</code> to a metric.</h2>
+      <p class="section-sub">
+        Install the package, point it at two directories of <code>.nii.gz</code> files,
+        and pick a Med3DNet checkpoint.
+      </p>
+
+      <div class="two-col">
+        <pre><span class="code-line"><span class="c"># install</span></span>
+<span class="code-line">pip install -e .</span>
+<span class="code-line"><span class="c"># medical extras</span></span>
+<span class="code-line">pip install nibabel einops <span class="s">"monai-generative"</span></span></pre>
+
+        <pre><span class="code-line"><span class="c"># 3D FID with Med3DNet-50</span></span>
+<span class="code-line">fidelity --gpu 0 --fid \</span>
+<span class="code-line">  --feature-extractor <span class="k">med3dnet-50</span> \</span>
+<span class="code-line">  --feature-extractor-weights-path <span class="s">/path/to/resnet_50.pth</span> \</span>
+<span class="code-line">  --vol-mode <span class="k">3d</span> \</span>
+<span class="code-line">  --input1 <span class="s">./real/</span> --input2 <span class="s">./generated/</span></span></pre>
+      </div>
+
+      <pre style="margin-top: 16px;"><span class="code-line"><span class="c"># 2.5D — runs all three orientations, reports each and their mean</span></span>
+<span class="code-line">fidelity --gpu 0 --fid \</span>
+<span class="code-line">  --feature-extractor <span class="k">inception-v3-compat</span> \</span>
+<span class="code-line">  --vol-mode <span class="k">2_5d</span> -b 4 \</span>
+<span class="code-line">  --input1 <span class="s">./real/</span> --input2 <span class="s">./generated/</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="c"># →  2_5_frechet_inception_distance_axial:    14.8</span></span>
+<span class="code-line"><span class="c"># →  2_5_frechet_inception_distance_sagittal: 16.1</span></span>
+<span class="code-line"><span class="c"># →  2_5_frechet_inception_distance_coronal:  15.4</span></span>
+<span class="code-line"><span class="c"># →  2_5_frechet_inception_distance_mean:     15.4</span></span></pre>
+
+      <p class="quote">
+        Keys are namespaced with a <code>2_5_</code> prefix and a <code>_mean</code> suffix
+        so they slot cleanly into wandb dashboards alongside the per-orientation values.
+      </p>
+    </section>
+
+    <section id="metrics">
+      <div class="section-kicker">Supported metrics</div>
+      <h2>The full set, on 2D <em>and</em> 3D inputs.</h2>
+      <p class="section-sub">
+        Every upstream metric works with both image directories and NIfTI volumes; the
+        feature extractor is the only thing that changes.
+      </p>
+
+      <div class="metrics">
+        <span class="chip warm">ISC — Inception Score</span>
+        <span class="chip warm">FID — Fréchet Inception Distance</span>
+        <span class="chip warm">KID — Kernel Inception Distance</span>
+        <span class="chip warm">PRC — Precision &amp; Recall</span>
+        <span class="chip warm">PPL — Perceptual Path Length</span>
+        <span class="chip sage">MS-SSIM <em>(added)</em></span>
+      </div>
+
+      <h2 style="margin-top: 56px;">Feature extractors</h2>
+      <p class="section-sub">
+        Pick the right backbone for your modality. 2D extractors apply to slices in 2.5D mode;
+        3D extractors operate on whole volumes.
+      </p>
+
+      <div class="metrics">
+        <span class="chip">inception-v3-compat</span>
+        <span class="chip">vgg16</span>
+        <span class="chip">clip-rn50 / clip-vit-*</span>
+        <span class="chip">dinov2-vit-*</span>
+        <span class="chip sage">med3dnet-10</span>
+        <span class="chip sage">med3dnet-18</span>
+        <span class="chip sage">med3dnet-34</span>
+        <span class="chip sage">med3dnet-50</span>
+        <span class="chip sage">med3dnet-101</span>
+        <span class="chip sage">med3dnet-152</span>
+        <span class="chip sage">med3dnet-200</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-kicker">Acknowledgements</div>
+      <h2>Built on the shoulders of upstream.</h2>
+      <p class="section-sub">
+        torch-fidelity-med is a fork of <a href="https://github.com/toshas/torch-fidelity"
+        style="color: var(--coral-deep);">torch-fidelity</a> by Anton Obukhov et&nbsp;al.
+        All of the precision, caching, and API design carries over — please cite the
+        original work when reporting results.
+      </p>
+
+      <pre>@misc{obukhov2020torchfidelity,
+  author    = {Anton Obukhov and Maximilian Seitzer and Po-Wei Wu and
+               Semen Zhydenko and Jonathan Kyl and Elvis Yu-Jing Lin},
+  year      = {2020},
+  title     = {High-fidelity performance metrics for generative models in PyTorch},
+  url       = {https://github.com/toshas/torch-fidelity},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.4957738}
+}</pre>
+    </section>
+
+    <footer>
+      <span>Apache 2.0 · made with <span class="heart">♥</span> for medical generative modelling</span>
+      <span>
+        <a href="https://github.com/niklasbubeck/torch-fidelity-med">repository</a>
+        ·
+        <a href="https://github.com/toshas/torch-fidelity">upstream</a>
+      </span>
+    </footer>
+  </div>
+</body>
+</html>

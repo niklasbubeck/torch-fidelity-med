@@ -5,3 +5,6 @@ build
 dist
 *.egg-info
 deploy*
+
+
+CLAUDE.md

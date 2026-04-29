@@ -57,7 +57,15 @@ def main():
     parser.add_argument("-r", "--prc", action="store_true", help="Calculate PRC (Precision and Recall)")
     parser.add_argument("-p", "--ppl", action="store_true", help="Calculate PPL (Perceptual Path Length)")
     parser.add_argument("-m", "--msssim", action="store_true", help="Calculate MSSSIM (Multi-Scale Structural Similarity)")
-    parser.add_argument("--vol-mode", default=DEFAULTS["vol-mode"], type=str, help="Mode to use, for images 2d is standard, for nii 3d is standard. Possibilities for med data are: [axial, sagittal, coronal]")
+    parser.add_argument(
+        "--vol-mode",
+        default=DEFAULTS["vol_mode"],
+        type=str,
+        choices=["3d", "axial", "sagittal", "coronal", "2_5d"],
+        help="Volume traversal mode for medical (NIfTI) inputs. '3d' feeds whole volumes to a 3D feature extractor; "
+        "'axial'/'sagittal'/'coronal' run 2.5D evaluation along that orientation; "
+        "'2_5d' runs all three orientations and reports per-orientation metrics plus their average.",
+    )
     parser.add_argument(
         "--feature-extractor",
         default=DEFAULTS["feature_extractor"],

@@ -266,7 +266,7 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
             input = glob_samples_paths(input, samples_find_deep, samples_find_ext, samples_ext_lossy, verbose)
             vassert(len(input) > 0, f"No samples found in {input} with samples_find_deep={samples_find_deep}")
             if input[0].endswith("nii.gz"):
-                input = NiftiPathDataset(input, mode=kwargs["vol_mode"])
+                input = NiftiPathDataset(input, mode=get_kwarg("vol_mode", kwargs))
             else:    
                 transforms = []
                 if samples_resize_and_crop > 0:
@@ -327,7 +327,11 @@ def prepare_input_from_id(input_id, **kwargs):
 
 def get_cacheable_input_name(input_id, **kwargs):
     input_desc = prepare_input_descriptor_from_input_id(input_id, **kwargs)
-    return input_desc["input_cache_name"]
+    name = input_desc["input_cache_name"]
+    vol_mode = get_kwarg("vol_mode", kwargs)
+    if name is not None and vol_mode in ("axial", "sagittal", "coronal"):
+        name = f"{name}-{vol_mode}"
+    return name
 
 
 def resolve_feature_extractor(**kwargs):
@@ -402,7 +406,9 @@ def extract_featuresdict_from_input_id(input_id, feat_extractor, **kwargs):
     input = prepare_input_from_id(input_id, **kwargs)
     if isinstance(input, Dataset):
         save_cpu_ram = get_kwarg("save_cpu_ram", kwargs)
-        featuresdict = get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_cpu_ram, verbose, kwargs["vol_mode"])
+        featuresdict = get_featuresdict_from_dataset(
+            input, feat_extractor, batch_size, cuda, save_cpu_ram, verbose, get_kwarg("vol_mode", kwargs)
+        )
     else:
         input_desc = prepare_input_descriptor_from_input_id(input_id, **kwargs)
         num_samples = input_desc["input_model_num_samples"]
